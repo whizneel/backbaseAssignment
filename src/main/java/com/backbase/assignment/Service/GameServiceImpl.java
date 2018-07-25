@@ -27,8 +27,10 @@ import java.util.stream.IntStream;
 
 @Service
 public class GameServiceImpl implements GameService {
-    private static String URL = "uri";
+    private static String URI = "uri";
     private static String ID = "id";
+    private static String STATUS = "status";
+    private static String URL = "url";
     private static final Logger LOGGER = LoggerFactory.getLogger(GameServiceImpl.class);
 
     @Value("${server.port}")
@@ -40,15 +42,16 @@ public class GameServiceImpl implements GameService {
     public ResponseEntity createNewGame() {
         Game game = new Game(CommonUtil.generateUniqueGameId(), GameStatus.CREATED.getName(),
                 initializePits(), GamePlayer.DOWN.getName());
-        Game gameSaved = gameRepository.save(game);
+        Game gameSaved = saveGame(game);
 
-        return CommonUtil.createOkResponse(Pair.of(URL, createGameURL(gameSaved.getGameId())),
+        return CommonUtil.createOkResponse(Pair.of(URI, createGameURL(gameSaved.getGameId())),
                 Pair.of(ID, gameSaved.getGameId()));
     }
 
     public ResponseEntity playGame(String gameId, Integer pitId) {
         LOGGER.info("playGame: gameID: {}, pitID: {}", gameId, pitId);
         Game game = gameRepository.findGameByGameId(gameId);
+
         if (game == null) {
             LOGGER.info("game not found for gameID: " + gameId);
             return CommonUtil.createFailureResponse(new ArrayList<>(),
@@ -184,8 +187,8 @@ public class GameServiceImpl implements GameService {
 
         jsonObject.put(Constants.MESSAGE, Constants.SUCCESS_STRING);
         jsonObject.put(ID, currentGame.getGameId());
-        jsonObject.put("url", createGameURL(currentGame.getGameId()));
-        jsonObject.put("status", currentGame.getPitJson());
+        jsonObject.put(URL, createGameURL(currentGame.getGameId()));
+        jsonObject.put(STATUS, currentGame.getPitJson());
         return jsonObject;
     }
 

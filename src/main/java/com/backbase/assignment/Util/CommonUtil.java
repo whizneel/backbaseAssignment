@@ -11,10 +11,12 @@ import java.net.InetAddress;
 import java.util.*;
 
 public class CommonUtil {
+    //generates unique ID and adds a prefix to it
     public static String generateUniqueGameId() {
         return Constants.GAME_ID_PREFIX + Long.toString(UUID.randomUUID().getLeastSignificantBits());
     }
 
+    //creates successful response
     public static ResponseEntity createOkResponse(Pair<String, Object>... pairs) {
         JSONObject resultJson = new JSONObject();
         for (Pair<String, Object> p : pairs) {
@@ -24,6 +26,7 @@ public class CommonUtil {
         return new ResponseEntity(resultJson.toString(), HttpStatus.OK);
     }
 
+    //creates failure response
     public static ResponseEntity createFailureResponse(List<String> errorList, String errorMessage, HttpStatus httpStatus) {
         ErrorResponse errorResponse = new ErrorResponse(errorMessage, errorList, Constants.FAILURE_STRING);
         JSONObject jsonObject = new JSONObject(errorResponse);

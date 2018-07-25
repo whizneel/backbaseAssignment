@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 public class GameController {
@@ -35,11 +36,12 @@ public class GameController {
     }
 
     //API to play game
+    //takes gameID and pitID
     @RequestMapping(value = "/games/{gameId}/pits/{pitId}", method = RequestMethod.PUT, headers = "Accept=application/json")
     public @ResponseBody
     ResponseEntity playGame(@PathVariable Map<String, String> pathVariablesMap) {
-        String gameId = pathVariablesMap.containsKey("gameId") ? pathVariablesMap.get("gameId") : null;
-        String pitId = pathVariablesMap.containsKey("pitId") ? pathVariablesMap.get("pitId") : null;
+        String gameId = Optional.ofNullable(pathVariablesMap.get("gameId")).orElse(null);
+        String pitId = Optional.ofNullable(pathVariablesMap.get("pitId")).orElse(null);
 
         if (StringUtils.isBlank(gameId) || StringUtils.isBlank(pitId)) {
             LOGGER.info("either gameId or pitId is blank");
@@ -50,7 +52,7 @@ public class GameController {
             Integer pitIdNumeric = Integer.valueOf(pitId);
             return gameService.playGame(gameId, pitIdNumeric);
         } catch (NumberFormatException e) {
-            return CommonUtil.createFailureResponse(new ArrayList<>(), "Invalid pitIdt", HttpStatus.OK);
+            return CommonUtil.createFailureResponse(new ArrayList<>(), "Invalid pitId", HttpStatus.OK);
         }
 
     }
