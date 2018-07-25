@@ -216,12 +216,14 @@ public class GameServiceImpl implements GameService {
 
     private boolean isGameOver(String player, Map<Integer, Integer> pitMap) {
         if (player.equalsIgnoreCase(GamePlayer.DOWN.getName())) {
+            //player 1 pits from [1,6]
             for (int i = 1; i <= 6; i++) {
                 if (pitMap.get(i) != 0) {
                     return false;
                 }
             }
         } else if (player.equalsIgnoreCase(GamePlayer.UP.getName())) {
+            //player 2 pits from [8,13]
             for (int i = 8; i <= 13; i++) {
                 if (pitMap.get(i) != 0) {
                     return false;
