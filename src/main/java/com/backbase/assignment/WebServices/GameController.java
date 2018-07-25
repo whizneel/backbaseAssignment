@@ -26,6 +26,7 @@ public class GameController {
         return "pong";
     }
 
+    //API to create new game
     @RequestMapping(value = "/games", method = RequestMethod.POST, headers = "Accept=application/json")
     public @ResponseBody
     ResponseEntity createGame() {
@@ -33,6 +34,7 @@ public class GameController {
         return gameService.createNewGame();
     }
 
+    //API to play game
     @RequestMapping(value = "/games/{gameId}/pits/{pitId}", method = RequestMethod.PUT, headers = "Accept=application/json")
     public @ResponseBody
     ResponseEntity playGame(@PathVariable Map<String, String> pathVariablesMap) {

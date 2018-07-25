@@ -31,12 +31,6 @@ public class CommonUtil {
     }
 
     public static String getLocalIP() {
-//        try (final DatagramSocket socket = new DatagramSocket()) {
-//            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-//            return socket.getLocalAddress().getHostAddress();
-//        } catch (Exception e) {
-//            return Constants.LOCALHOST_IP;
-//        }
         return Constants.LOCALHOST_IP;
     }
 

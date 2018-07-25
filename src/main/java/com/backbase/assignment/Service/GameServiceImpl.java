@@ -27,8 +27,8 @@ import java.util.stream.IntStream;
 
 @Service
 public class GameServiceImpl implements GameService {
-    public static String URL = "uri";
-    public static String ID = "id";
+    private static String URL = "uri";
+    private static String ID = "id";
     private static final Logger LOGGER = LoggerFactory.getLogger(GameServiceImpl.class);
 
     @Value("${server.port}")
@@ -42,7 +42,7 @@ public class GameServiceImpl implements GameService {
                 initializePits(), GamePlayer.DOWN.getName());
         Game gameSaved = gameRepository.save(game);
 
-        return CommonUtil.createOkResponse(Pair.of(URL, createGameURL(game.getGameId())),
+        return CommonUtil.createOkResponse(Pair.of(URL, createGameURL(gameSaved.getGameId())),
                 Pair.of(ID, gameSaved.getGameId()));
     }
 
@@ -117,7 +117,7 @@ public class GameServiceImpl implements GameService {
                     if (skipOpponentHouse) {
                         Integer val = pitMap.get(pitId + i + 1 - Constants.TOTAL_NO_PITS);
                         pitMap.put(pitId + i + 1 - Constants.TOTAL_NO_PITS, (val + 1));
-                        skipOpponentHouse = false;
+
                     } else {
                         Integer val = pitMap.get(pitId + i);
                         pitMap.put(pitId + i, (val + 1));
@@ -129,7 +129,7 @@ public class GameServiceImpl implements GameService {
                     if (skipOpponentHouse) {
                         Integer val = pitMap.get(pitId + i + 1 - Constants.TOTAL_NO_PITS);
                         pitMap.put(pitId + i + 1 - Constants.TOTAL_NO_PITS, val + 1);
-                        skipOpponentHouse = false;
+
                     } else {
                         Integer val = pitMap.get(pitId + i - Constants.TOTAL_NO_PITS);
                         pitMap.put(pitId + i - Constants.TOTAL_NO_PITS, val + 1);
@@ -143,10 +143,10 @@ public class GameServiceImpl implements GameService {
             if (captureMode) {
                 Integer playerHouseValBefore = pitMap.get(playerHouse)
                         + pitMap.get(pitId + stones)
-                        + pitMap.get(Constants.TOTAL_NO_PITS - pitId - stones);
+                        + pitMap.get(Constants.TOTAL_NO_PITS - pitId - stones - 1);
                 pitMap.put(playerHouse, playerHouseValBefore);
                 pitMap.put(pitId + stones, 0);
-                pitMap.put(Constants.TOTAL_NO_PITS - pitId - stones, 0);
+                pitMap.put(Constants.TOTAL_NO_PITS - pitId - stones - 1, 0);
             }
 
             String newPlayer;
@@ -166,9 +166,10 @@ public class GameServiceImpl implements GameService {
             }
 
             //game over condition
-            if (playerPits.stream().allMatch(x -> x == 0)) {
+            if (isGameOver(player, pitMap)) {
                 newPlayer = GamePlayer.NO_PLAYER.getName();
                 gameStatus = GameStatus.COMPLETED.getName();
+                pitMap = makeScoresAtEndOfGame(pitMap);
             }
 
             currentGame.setStatus(gameStatus);
@@ -186,6 +187,45 @@ public class GameServiceImpl implements GameService {
         jsonObject.put("url", createGameURL(currentGame.getGameId()));
         jsonObject.put("status", currentGame.getPitJson());
         return jsonObject;
+    }
+
+    private Map<Integer, Integer> makeScoresAtEndOfGame(Map<Integer, Integer> pitMap) {
+        Integer player1Score = 0;
+        Integer player2Score = 0;
+        for (Integer key : pitMap.keySet()) {
+            if (key >= 1 && key <= 6) {
+                player1Score += pitMap.get(key);
+                pitMap.put(key, 0);
+            } else if (key >= 8 && key <= 13) {
+                player2Score += pitMap.get(key);
+                pitMap.put(key, 0);
+            }
+        }
+
+        player1Score += pitMap.get(7);
+        pitMap.put(7, player1Score);
+
+        player2Score += pitMap.get(14);
+        pitMap.put(14, player2Score);
+
+        return pitMap;
+    }
+
+    private boolean isGameOver(String player, Map<Integer, Integer> pitMap) {
+        if (player.equalsIgnoreCase(GamePlayer.DOWN.getName())) {
+            for (int i = 1; i <= 6; i++) {
+                if (pitMap.get(i) != 0) {
+                    return false;
+                }
+            }
+        } else if (player.equalsIgnoreCase(GamePlayer.UP.getName())) {
+            for (int i = 8; i <= 13; i++) {
+                if (pitMap.get(i) != 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private Game saveGame(Game game) {
@@ -234,8 +274,12 @@ public class GameServiceImpl implements GameService {
     }
 
     private String mapToJson(Map<Integer, Integer> map) {
+        Map<String, String> stringMap = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Integer> pair : map.entrySet()) {
+            stringMap.put(String.valueOf(pair.getKey()), String.valueOf(pair.getValue()));
+        }
         Gson gson = new Gson();
-        return gson.toJson(map);
+        return gson.toJson(stringMap);
     }
 
     private String createGameURL(String gameId) {
